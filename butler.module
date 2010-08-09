@@ -67,6 +67,8 @@ class DrupalContext implements DrupalContextInterface {
 
   protected $queryString;
 
+  protected $handlerClasses = array();
+
   protected $handlers = array();
 
   protected $context = array();
@@ -92,12 +94,12 @@ class DrupalContext implements DrupalContextInterface {
 
   public function offsetGet($offset) {
     if (!isset($this->context[$offset])) {
-      if (isset($this->handlers[$offset])) {
-        $this->handlers[$offset] = "Context_{$offset}";
+      if (isset($this->handlerClasses[$offset])) {
+        $this->handlerClasses[$offset] = "Context_{$offset}";
       }
-      if (class_exists($this->handlers[$offset])) {
-        $handler = new $this->handlers[$offset];
-        $this->context[$offset] = $handler->getValue();
+      if (class_exists($this->handlerClasses[$offset])) {
+        $this->handlers[$offset] = new $this->handlerClasses[$offset];
+        $this->context[$offset] = $this->handlers[$offset]->getValue();
       }
       else {
         $this->context[$offset] = NULL;
