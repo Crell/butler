@@ -1,2 +1,58 @@
 <?php
 
+interface DrupalRequestInterface {
+  
+}
+
+class DrupalRequest implements DrupalRequestInterface {
+
+  protected $getQuery;
+
+  protected $postQuery;
+
+  public function __construct() {
+    $this->getQuery = $_GET;
+    $this->postQuery = $_POST;
+  }
+
+  public function __get($var) {
+    if ($var == 'get') {
+      return $this->getQuery;
+    }
+  }
+
+  public function __set($var, $val) {
+    if ($var == 'get' || $var == 'post') {
+      // @todo Real error handling.
+      return NULL;
+    }
+    
+  }
+
+}
+
+interface DrupalContextInterface {
+  
+}
+
+class DrupalContext implements DrupalContextInterface {
+
+  protected $queryString;
+
+  public function __construct(DrupalRequestInterface $request) {
+    $this->request = $request;
+
+    $this->queryString = $this->request->get['q'];
+  }
+
+  public function request() {
+    return $this->request;
+  }
+
+  public function arg($index) {
+    // @todo Eventually reverse this, so arg() calls context->arg().
+    return arg($index, $this->queryString);
+  }
+
+}
+
