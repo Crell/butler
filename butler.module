@@ -1,7 +1,7 @@
 <?php
 
 interface DrupalRequestInterface {
-  
+
 }
 
 class DrupalRequestHttp implements DrupalRequestInterface {
@@ -43,7 +43,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
       // @todo Real error handling.
       return NULL;
     }
-    
+
   }
 
   public function header($header) {
@@ -60,7 +60,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
 }
 
 interface DrupalContextInterface extends ArrayAccess {
-  
+
 }
 
 class DrupalContext implements DrupalContextInterface {
@@ -89,15 +89,24 @@ class DrupalContext implements DrupalContextInterface {
   public function offsetExists($offset) {
     return isset($this->handlers[$offset]);
   }
-  
+
   public function offsetGet($offset) {
     if (!isset($this->context[$offset])) {
       if (isset($this->handlers[$offset])) {
         $this->handlers[$offset] = "Context_{$offset}";
       }
+      if (class_exists($this->handlers[$offset])) {
+        $handler = new $this->handlers[$offset];
+        $this->context[$offset] = $handler->getValue();
+      }
+      else {
+        $this->context[$offset] = NULL;
+      }
     }
+
+    return $this->context[$offset];
   }
-  
+
   public function offsetSet($offset, $value) {
     // Do nothing, because we don't want people to be able to directly modify
     // context handlers.
