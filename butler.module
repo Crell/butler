@@ -4,7 +4,7 @@ interface DrupalRequestInterface {
   
 }
 
-class DrupalRequest implements DrupalRequestInterface {
+class DrupalRequestHttp implements DrupalRequestInterface {
 
   protected $getQuery;
 
@@ -59,13 +59,17 @@ class DrupalRequest implements DrupalRequestInterface {
 
 }
 
-interface DrupalContextInterface {
+interface DrupalContextInterface extends ArrayAccess {
   
 }
 
 class DrupalContext implements DrupalContextInterface {
 
   protected $queryString;
+
+  protected $handlers = array();
+
+  protected $context = array();
 
   public function __construct(DrupalRequestInterface $request) {
     $this->request = $request;
@@ -81,6 +85,28 @@ class DrupalContext implements DrupalContextInterface {
     // @todo Eventually reverse this, so arg() calls context->arg().
     return arg($index, $this->queryString);
   }
+
+  public function offsetExists($offset) {
+    return isset($this->handlers[$offset]);
+  }
+  
+  public function offsetGet($offset) {
+    if (!isset($this->context[$offset])) {
+      if (isset($this->handlers[$offset])) {
+        $this->handlers[$offset] = "Context_{$offset}";
+      }
+    }
+  }
+  
+  public function offsetSet($offset, $value) {
+    // Do nothing, because we don't want people to be able to directly modify
+    // context handlers.
+  }
+
+  public function offsetUnset($offset) {
+    // Do nothing, I guess?
+  }
+
 
 }
 
