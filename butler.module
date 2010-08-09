@@ -16,6 +16,8 @@ class DrupalRequest implements DrupalRequestInterface {
 
   protected $requestQuery;
 
+  protected $requestHeaders;
+
   public function __construct() {
     $this->getQuery = $_GET;
     $this->postQuery = $_POST;
@@ -42,6 +44,17 @@ class DrupalRequest implements DrupalRequestInterface {
       return NULL;
     }
     
+  }
+
+  public function header($header) {
+    // @todo This is, of course, Apache-specific.  We need to find the IIS
+    // equilvalent, too.  Maybe that's even an alternate class implementation?
+    if (!$this->headers) {
+      $this->requestHeaders = apache_request_headers();
+    }
+
+    // @todo This needs proper escaping.  I'm not entirely sure how to do that.
+    return isset($this->requestHeaders[$header]) ? $this->requestHeader : NULL;
   }
 
 }
