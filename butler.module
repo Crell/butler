@@ -10,9 +10,24 @@ class DrupalRequest implements DrupalRequestInterface {
 
   protected $postQuery;
 
+  protected $filesQuery;
+
+  protected $cookiesQuery;
+
+  protected $requestQuery;
+
   public function __construct() {
     $this->getQuery = $_GET;
     $this->postQuery = $_POST;
+    $this->filesQuery = $_FILES;
+    $this->cookiesQuery = $_COOKIES;
+    $this->requestQuery = $_REQUEST;
+
+    array_walk($this->getQuery, '_fix_gpc_magic');
+    array_walk($this->postQuery, '_fix_gpc_magic');
+    array_walk($this->filesQuery, '_fix_gpc_magic');
+    array_walk($this->cookiesQuery, '_fix_gpc_magic');
+    array_walk($this->requestQuery, '_fix_gpc_magic');
   }
 
   public function __get($var) {
