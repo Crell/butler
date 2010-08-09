@@ -1,0 +1,5 @@
+name = Butler
+description = Central context handling system for Drupal
+core = 7.x
+files[] = butler.module
+files[] = butler.test
