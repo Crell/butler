@@ -12,7 +12,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
 
   protected $filesQuery;
 
-  protected $cookiesQuery;
+  protected $cookieQuery;
 
   protected $requestQuery;
 
@@ -22,13 +22,13 @@ class DrupalRequestHttp implements DrupalRequestInterface {
     $this->getQuery = $_GET;
     $this->postQuery = $_POST;
     $this->filesQuery = $_FILES;
-    $this->cookiesQuery = $_COOKIES;
+    $this->cookieQuery = $_COOKIE;
     $this->requestQuery = $_REQUEST;
 
     array_walk($this->getQuery, '_fix_gpc_magic');
     array_walk($this->postQuery, '_fix_gpc_magic');
     array_walk($this->filesQuery, '_fix_gpc_magic');
-    array_walk($this->cookiesQuery, '_fix_gpc_magic');
+    array_walk($this->cookieQuery, '_fix_gpc_magic');
     array_walk($this->requestQuery, '_fix_gpc_magic');
   }
 
