@@ -46,6 +46,47 @@ class DrupalRequestHttp implements DrupalRequestInterface {
 
   }
 
+  /**
+   * Retrieves a value from the GET query.
+   *
+   * See the PHP ext/filter documentation for details.
+   *
+   * @link http://www.php.net/manual/en/book.filter.php
+   *
+   * @param string $param
+   * @param int $filter
+   * @param array $options
+   *
+   * @return mixed
+   */
+  public function get($param, $filter = FILTER_UNSAFE_RAW, $options = array()) {
+    if (!empty($this->getQuery[$param])) {
+      return filter_var($this->getQuery[$param], $filter, $options);
+    }
+    return FALSE;
+  }
+
+  /**
+   * Retrieves a value from the POST query.
+   *
+   * See the PHP ext/filter documentation for details.
+   *
+   * @link http://www.php.net/manual/en/book.filter.php
+   *
+   * @param string $param
+   * @param int $filter
+   * @param array $options
+   *
+   * @return mixed
+   */
+  public function post($param, $filter = FILTER_UNSAFE_RAW, $options = array()) {
+    if (!empty($this->postQuery[$param])) {
+      return filter_var($this->postQuery[$param], $filter, $options);
+    }
+    return FALSE;
+  }
+
+
   public function header($header) {
     // @todo This is, of course, Apache-specific.  We need to find the IIS
     // equilvalent, too.  Maybe that's even an alternate class implementation?
@@ -193,7 +234,7 @@ class ContextHandlerHttp {
 
   public function getValue($args = array()) {
     $param = $args[0];
-    $arg = $this->context->request()->get[$param];
+    $arg = $this->context->request()->get($param);
     return $arg;
   }
 }
