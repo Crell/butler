@@ -19,7 +19,7 @@ class ButlerTestCase extends DrupalWebTestCase {
   function testSimpleRegistration() {
     $_GET['foo'] = 'bar';
     
-    $butler = new DrupalContext(new DrupalRequestHttp());
+    $butler = new DrupalContext(new ButlerFakeRequest(array('foo' => 'bar')));
 
     $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
     $butler->lock();
@@ -30,7 +30,7 @@ class ButlerTestCase extends DrupalWebTestCase {
   }
 
   function testExplicitContext() {
-    $butler = new DrupalContext(new DrupalRequestHttp());
+    $butler = new DrupalContext(new ButlerFakeRequest());
 
     $butler['foo:bar'] = 'baz';
 
@@ -40,7 +40,7 @@ class ButlerTestCase extends DrupalWebTestCase {
   }
 
   function testExplicitContextOverride() {
-    $butler = new DrupalContext(new DrupalRequestHttp());
+    $butler = new DrupalContext(new ButlerFakeRequest());
 
     // This handler would return "one".
     $butler->registerHandler('foo:bar', 'ButlerTestCaseHelperOne');
@@ -57,7 +57,7 @@ class ButlerTestCase extends DrupalWebTestCase {
    * Test that we can lock a context object against modification.
    */
   function testLockStatusExplcit() {
-    $butler = new DrupalContext(new DrupalRequestHttp());
+    $butler = new DrupalContext(new ButlerFakeRequest());
 
     try {
       $butler->lock();
@@ -78,7 +78,7 @@ class ButlerTestCase extends DrupalWebTestCase {
    * Test that we can lock a context object against modification.
    */
   function testLockStatusDerived() {
-    $butler = new DrupalContext(new DrupalRequestHttp());
+    $butler = new DrupalContext(new ButlerFakeRequest());
 
     try {
       $butler->lock();
@@ -101,4 +101,19 @@ class ButlerTestCaseHelperOne extends ContextHandlerAbstract {
   public function getValue(array $args = array()) {
     return 'one';
   }
+}
+
+class ButlerFakeRequest extends DrupalRequestHttp {
+
+  public function __construct($get = array(), $post = array()) {
+    parent::__construct();
+
+    $get += array(
+      'q' => '',
+    );
+
+    $this->getQuery = $get;
+    $this->postQuery = $post;
+  }
+
 }
