@@ -125,6 +125,40 @@ class DrupalContext implements DrupalContextInterface {
     // Do nothing, I guess?
   }
 
+/**
+ * Implements hook_menu().
+ */
+function butler_menu() {
+  $items = array();
 
+  $items['butler'] = array(
+    'title' => 'Butler testing',
+    'page callback' => 'butler_test',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
 }
 
+function butler_test() {
+
+  $butler = new DrupalContext(new DrupalRequestHttp());
+
+  module_invoke_all('context_init', $butler);
+
+  dpm($butler);
+
+  $q = $butler['http:get:q'];
+
+  dpm($q);
+
+  return 'x';
+}
+
+function butler_context_init(DrupalContextInterface $butler) {
+
+  $butler->registerHandler('http:get', 'ContextHandlerHttp');
+
+
+}
