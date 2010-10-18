@@ -73,12 +73,19 @@ class DrupalContext implements DrupalContextInterface {
 
   protected $context = array();
 
+  protected $request = NULL;
+
   public function __construct(DrupalRequestInterface $request) {
     $this->request = $request;
 
     $this->queryString = $this->request->get['q'];
   }
 
+  /**
+   * Access the HTTP request information.
+   *
+   * @return DrupalRequestInterface
+   */
   public function request() {
     return $this->request;
   }
