@@ -166,11 +166,13 @@ function butler_test() {
   return 'x';
 }
 
+/**
+ * Implements hook_context_init().
+ *
+ * @param DrupalContextInterface $butler
+ */
 function butler_context_init(DrupalContextInterface $butler) {
-
   $butler->registerHandler('http:get', 'ContextHandlerHttp');
-
-
 }
 
 class ContextHandlerHttp {
