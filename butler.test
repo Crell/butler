@@ -14,16 +14,14 @@ class ButlerCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test the syslog settings page.
+   * Test simple handler registration.
    */
   function testSimpleRegistration() {
     $_GET['foo'] = 'bar';
     
     $butler = new DrupalContext(new DrupalRequestHttp());
 
-    $butler->registerHandler('http:get', 'ContextHandlerHttp');
-
-    dpm($butler);
+    $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
 
     $param = $butler['http:get:foo'];
 

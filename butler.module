@@ -150,8 +150,8 @@ class DrupalContext implements DrupalContextInterface {
       }
 
       $offset = implode(':', $offset_elements);
-      if (class_exists($this->handlerClasses[$offset])) {
-        $this->handlers[$offset] = new $this->handlerClasses[$offset]($this);
+      if (class_exists($this->handlerClasses[$offset]['class'])) {
+        $this->handlers[$offset] = new $this->handlerClasses[$offset]['class']($this, $this->handlerClasses[$offset]['params']);
         $this->context[$offset] = $this->handlers[$offset]->getValue($args);
       }
       else {
@@ -171,8 +171,8 @@ class DrupalContext implements DrupalContextInterface {
     // Do nothing, I guess?
   }
 
-  public function registerHandler($offset, $class) {
-    $this->handlerClasses[$offset] = $class;
+  public function registerHandler($offset, $class, $params = array()) {
+    $this->handlerClasses[$offset] = array('class' => $class, 'params' => $params);
   }
 }
 
@@ -213,7 +213,8 @@ function butler_test() {
  * @param DrupalContextInterface $butler
  */
 function butler_context_init(DrupalContextInterface $butler) {
-  $butler->registerHandler('http:get', 'ContextHandlerHttp');
+  $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
+  $butler->registerHandler('http:post', 'ContextHandlerHttp', array('query' => 'POST'));
 }
 
 class ContextHandlerHttp {
@@ -228,13 +229,20 @@ class ContextHandlerHttp {
    */
   protected $context;
 
-  public function __construct(DrupalContextInterface $context) {
+  protected $params;
+
+  public function __construct(DrupalContextInterface $context, $params) {
     $this->context = $context;
+    $this->params = $params;
   }
 
   public function getValue($args = array()) {
     $param = $args[0];
-    $arg = $this->context->request()->get($param);
-    return $arg;
+    if ($this->params['query'] == 'GET') {
+      return $this->context->request()->get($param);
+    }
+    if ($this->params['query'] == 'POST') {
+      return $this->context->request()->post($param);
+    }
   }
 }
