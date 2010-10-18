@@ -96,26 +96,9 @@ class ButlerTestCase extends DrupalWebTestCase {
   }
 }
 
-class ButlerTestCaseHelperOne {
+class ButlerTestCaseHelperOne extends ContextHandlerAbstract {
 
-  /**
-   * Reference to the context object.
-   *
-   * Note: This creates a circular reference.  We should probably get rid of it
-   * and pass it every time.
-   *
-   * @var DrupalContextInterface
-   */
-  protected $context;
-
-  protected $params;
-
-  public function __construct(DrupalContextInterface $context, $params) {
-    $this->context = $context;
-    $this->params = $params;
-  }
-
-  public function getValue($args = array()) {
+  public function getValue(array $args = array()) {
     return 'one';
   }
 }

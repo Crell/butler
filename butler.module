@@ -256,8 +256,11 @@ function butler_context_init(DrupalContextInterface $butler) {
   $butler->registerHandler('http:post', 'ContextHandlerHttp', array('query' => 'POST'));
 }
 
-class ContextHandlerHttp {
+interface ContextHandlerInterface {
+  public function getValue(array $args = array());
+}
 
+abstract class ContextHandlerAbstract implements ContextHandlerInterface {
   /**
    * Reference to the context object.
    *
@@ -268,14 +271,23 @@ class ContextHandlerHttp {
    */
   protected $context;
 
+  /**
+   * Parameters for the context handler.
+   *
+   * @var array
+   */
   protected $params;
 
   public function __construct(DrupalContextInterface $context, $params) {
     $this->context = $context;
     $this->params = $params;
   }
+}
 
-  public function getValue($args = array()) {
+class ContextHandlerHttp extends ContextHandlerAbstract {
+
+
+  public function getValue(array $args = array()) {
     $param = $args[0];
     if ($this->params['query'] == 'GET') {
       return $this->context->request()->get($param);
