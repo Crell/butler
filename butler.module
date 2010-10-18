@@ -97,6 +97,12 @@ class DrupalRequestHttp implements DrupalRequestInterface {
   }
 
 
+  /**
+   * Retrives an arbitrary HTTP header.
+   *
+   * @param <type> $header
+   * @return mixed
+   */
   public function header($header) {
     // @todo This is, of course, Apache-specific.  We need to find the IIS
     // equilvalent, too.  Maybe that's even an alternate class implementation?
@@ -110,28 +116,65 @@ class DrupalRequestHttp implements DrupalRequestInterface {
 
 }
 
+/**
+ * Interface definition for all context objects.
+ */
 interface DrupalContextInterface extends ArrayAccess {
 
 }
 
+/**
+ * Default Drupal context Butler.
+ *
+ * It handles routing of context requests to handlers.
+ */
 class DrupalContext implements DrupalContextInterface {
 
+  /**
+   * The query string for this page. This generally means the value of $_GET['q'].
+   *
+   * @var string
+   */
   protected $queryString;
 
+  /**
+   * Index of registered handler classes.
+   *
+   * @var array
+   */
   protected $handlerClasses = array();
 
+  /**
+   * Index of already-instantiated handler objects.
+   * 
+   * @var array
+   */
   protected $handlers = array();
 
+  /**
+   * Key/value store of already-derived context information.
+   *
+   * @var array
+   */
   protected $context = array();
 
+  /**
+   * The initial request object that started this page request.
+   *
+   * @var DrupalRequestInterface
+   */
   protected $request = NULL;
 
+  /**
+   * Whether or not this object has been locked against further changes.
+   * @var boolean
+   */
   protected $locked = FALSE;
 
   public function __construct(DrupalRequestInterface $request) {
     $this->request = $request;
 
-    $this->queryString = $this->request->get['q'];
+    $this->queryString = $this->request->get('q');
   }
 
   /**
@@ -156,6 +199,9 @@ class DrupalContext implements DrupalContextInterface {
     if (!$this->locked) {
       throw new ButlerNotLockedException(t('This butler object has not been locked. It must be locked before it can be used.'));
     }
+
+    // @todo Right now the $this->context caching is probably broken with regard
+    // to the key/args split.  Check that and fix if needed.
 
     if (!isset($this->context[$offset])) {
       $offset_elements = explode(':', $offset);
@@ -195,11 +241,22 @@ class DrupalContext implements DrupalContextInterface {
     unset($this->context[$offset]);
   }
 
-  public function registerHandler($offset, $class, $params = array()) {
+  /**
+   * Register a class as the handler for a given context.
+   *
+   * @param string $context
+   *   The context key to register for, such as "http:get".
+   * @param string $class
+   *   The name of the class that will handle this context key, unless overridden.
+   *   The class must implement ContextHandlerInterface.
+   * @param array $params
+   *   An array of configuration options for the class.
+   */
+  public function registerHandler($context, $class, $params = array()) {
     if ($this->locked) {
       throw new ButlerLockedException(t('This butler object has been locked. It no longer accepts new handler registrations.'));
     }
-    $this->handlerClasses[$offset] = array('class' => $class, 'params' => $params);
+    $this->handlerClasses[$context] = array('class' => $class, 'params' => $params);
   }
 
   /**
@@ -229,6 +286,9 @@ function butler_menu() {
   return $items;
 }
 
+/**
+ * Menu callback; Basic testing page for Butler logic.
+ */
 function butler_test() {
 
   $butler = new DrupalContext(new DrupalRequestHttp());
@@ -256,16 +316,40 @@ function butler_context_init(DrupalContextInterface $butler) {
   $butler->registerHandler('http:post', 'ContextHandlerHttp', array('query' => 'POST'));
 }
 
+/**
+ * Interface for context handler objects.
+ */
 interface ContextHandlerInterface {
+
+  /**
+   * Retrieves the value for this context key.
+   *
+   * This value must be assumed to be immutable within a given request.
+   *
+   * @param array $args
+   *   Arguments to pass into the context handler.  Arguments are derived from
+   *   the portion of the context key after the key fragment that led to this
+   *   handler.
+   * @return mixed
+   *   The corresponding value for this context.
+   */
   public function getValue(array $args = array());
 }
 
+/**
+ * Base implementation of a Context Handler.
+ *
+ * Other handlers may extend this class to make their job easier.
+ */
 abstract class ContextHandlerAbstract implements ContextHandlerInterface {
+
   /**
    * Reference to the context object.
    *
    * Note: This creates a circular reference.  We should probably get rid of it
    * and pass it every time.
+   *
+   * @todo Get rid of this property and avoid the circular dependency.
    *
    * @var DrupalContextInterface
    */
@@ -286,8 +370,8 @@ abstract class ContextHandlerAbstract implements ContextHandlerInterface {
 
 class ContextHandlerHttp extends ContextHandlerAbstract {
 
-
   public function getValue(array $args = array()) {
+    // @todo Make this actually generic.
     $param = $args[0];
     if ($this->params['query'] == 'GET') {
       return $this->context->request()->get($param);
