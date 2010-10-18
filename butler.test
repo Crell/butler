@@ -1,1 +1,33 @@
 <?php
+
+class ButlerCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Butler functionality',
+      'description' => 'Test the Butler context object.',
+      'group' => 'Butler',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('butler');
+  }
+
+  /**
+   * Test the syslog settings page.
+   */
+  function testSimpleRegistration() {
+    $_GET['foo'] = 'bar';
+    
+    $butler = new DrupalContext(new DrupalRequestHttp());
+
+    $butler->registerHandler('http:get', 'ContextHandlerHttp');
+
+    dpm($butler);
+
+    $param = $butler['http:get:foo'];
+
+    $this->assertEqual($param, 'bar', t('Correct Http GET fragment found.'));
+
+  }
+}
