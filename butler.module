@@ -125,6 +125,11 @@ class DrupalContext implements DrupalContextInterface {
     // Do nothing, I guess?
   }
 
+  public function registerHandler($offset, $class) {
+    $this->handerClasses[$offset] = $class;
+  }
+}
+
 /**
  * Implements hook_menu().
  */
@@ -161,4 +166,17 @@ function butler_context_init(DrupalContextInterface $butler) {
   $butler->registerHandler('http:get', 'ContextHandlerHttp');
 
 
+}
+
+class ContextHandlerHttp {
+
+  protected $context;
+
+  public function __construct(DrupalContextInterface $context) {
+    $this->context = $context;
+  }
+
+  public function getValue() {
+    $q = $this->context->request()->get['q'];
+  }
 }
