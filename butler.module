@@ -101,12 +101,17 @@ class DrupalContext implements DrupalContextInterface {
 
   public function offsetGet($offset) {
     if (!isset($this->context[$offset])) {
-      if (isset($this->handlerClasses[$offset])) {
-        $this->handlerClasses[$offset] = "Context_{$offset}";
+      $offset_elements = explode(':', $offset);
+      $args = array();
+      while ($offset_elements && !isset($this->handlerClasses[$offset])) {
+        $args[] = array_pop($offset_elements);
+        $offset = implode(':', $offset_elements);
       }
+
+      $offset = implode(':', $offset_elements);
       if (class_exists($this->handlerClasses[$offset])) {
-        $this->handlers[$offset] = new $this->handlerClasses[$offset];
-        $this->context[$offset] = $this->handlers[$offset]->getValue();
+        $this->handlers[$offset] = new $this->handlerClasses[$offset]($this);
+        $this->context[$offset] = $this->handlers[$offset]->getValue($args);
       }
       else {
         $this->context[$offset] = NULL;
@@ -126,7 +131,7 @@ class DrupalContext implements DrupalContextInterface {
   }
 
   public function registerHandler($offset, $class) {
-    $this->handerClasses[$offset] = $class;
+    $this->handlerClasses[$offset] = $class;
   }
 }
 
@@ -170,13 +175,23 @@ function butler_context_init(DrupalContextInterface $butler) {
 
 class ContextHandlerHttp {
 
+  /**
+   * Reference to the context object.
+   *
+   * Note: This creates a circular reference.  We should probably get rid of it
+   * and pass it every time.
+   *
+   * @var DrupalContextInterface
+   */
   protected $context;
 
   public function __construct(DrupalContextInterface $context) {
     $this->context = $context;
   }
 
-  public function getValue() {
-    $q = $this->context->request()->get['q'];
+  public function getValue($args = array()) {
+    $param = $args[0];
+    $arg = $this->context->request()->get[$param];
+    return $arg;
   }
 }
