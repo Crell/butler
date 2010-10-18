@@ -1,6 +1,6 @@
 <?php
 
-class ButlerCase extends DrupalWebTestCase {
+class ButlerTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Butler functionality',
@@ -22,10 +22,100 @@ class ButlerCase extends DrupalWebTestCase {
     $butler = new DrupalContext(new DrupalRequestHttp());
 
     $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
+    $butler->lock();
 
     $param = $butler['http:get:foo'];
 
     $this->assertEqual($param, 'bar', t('Correct Http GET fragment found.'));
+  }
 
+  function testExplicitContext() {
+    $butler = new DrupalContext(new DrupalRequestHttp());
+
+    $butler['foo:bar'] = 'baz';
+
+    $butler->lock();
+
+    $this->assertEqual($butler['foo:bar'], 'baz', t('Explicit context set correctly.'));
+  }
+
+  function testExplicitContextOverride() {
+    $butler = new DrupalContext(new DrupalRequestHttp());
+
+    // This handler would return "one".
+    $butler->registerHandler('foo:bar', 'ButlerTestCaseHelperOne');
+
+    // But we override it to "two".
+    $butler['foo:bar'] = 'two';
+
+    $butler->lock();
+
+    $this->assertEqual($butler['foo:bar'], 'two', t('Explicit context overridden correctly.'));
+  }
+
+  /**
+   * Test that we can lock a context object against modification.
+   */
+  function testLockStatusExplcit() {
+    $butler = new DrupalContext(new DrupalRequestHttp());
+
+    try {
+      $butler->lock();
+      // This should throw an exception.
+      $butler['foo:bar'] = 'baz';
+
+      $this->fail(t('Exception not thrown when setting context on a locked object.'));
+    }
+    catch (ButlerLockedException $e) {
+      $this->pass(t('Proper exception thrown when setting context on a locked object.'));
+    }
+    catch (Exception $e) {
+      $this->fail(t('Incorrect exception thrown when modifying a locked object.'));
+    }
+  }
+
+  /**
+   * Test that we can lock a context object against modification.
+   */
+  function testLockStatusDerived() {
+    $butler = new DrupalContext(new DrupalRequestHttp());
+
+    try {
+      $butler->lock();
+      // This should throw an exception.
+      $butler->registerHandler('foo:bar', 'ButlerTestCaseHelperOne');
+
+      $this->fail(t('Exception not thrown when setting context on a locked object.'));
+    }
+    catch (ButlerLockedException $e) {
+      $this->pass(t('Proper exception thrown when setting context handler on a locked object.'));
+    }
+    catch (Exception $e) {
+      $this->fail(t('Incorrect exception thrown when modifying a locked object.'));
+    }
+  }
+}
+
+class ButlerTestCaseHelperOne {
+
+  /**
+   * Reference to the context object.
+   *
+   * Note: This creates a circular reference.  We should probably get rid of it
+   * and pass it every time.
+   *
+   * @var DrupalContextInterface
+   */
+  protected $context;
+
+  protected $params;
+
+  public function __construct(DrupalContextInterface $context, $params) {
+    $this->context = $context;
+    $this->params = $params;
+  }
+
+  public function getValue($args = array()) {
+    return 'one';
   }
 }
