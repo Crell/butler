@@ -50,9 +50,13 @@ class DrupalRequestHttp implements DrupalRequestInterface {
    * @link http://www.php.net/manual/en/book.filter.php
    *
    * @param string $param
+   *   The name of the GET parameter to retrieve.
    * @param int $filter
+   *   The PHP filter rules to apply to the filter. See the ext/filter
+   *   documentation for a complete list of available settings.
    * @param array $options
-   *
+   *   An array of options to customize $filter.  See the ext/filter
+   *   documentation for a complete list of available settings.
    * @return mixed
    */
   public function get($param, $filter = FILTER_UNSAFE_RAW, $options = array()) {
@@ -69,9 +73,12 @@ class DrupalRequestHttp implements DrupalRequestInterface {
    *
    * @link http://www.php.net/manual/en/book.filter.php
    *
-   * @param string $param
    * @param int $filter
+   *   The PHP filter rules to apply to the filter. See the ext/filter
+   *   documentation for a complete list of available settings.
    * @param array $options
+   *   An array of options to customize $filter.  See the ext/filter
+   *   documentation for a complete list of available settings.
    *
    * @return mixed
    */
@@ -86,7 +93,8 @@ class DrupalRequestHttp implements DrupalRequestInterface {
   /**
    * Retrives an arbitrary HTTP header.
    *
-   * @param <type> $header
+   * @param string $header
+   *   The name of the header to request.
    * @return mixed
    */
   public function header($header) {
