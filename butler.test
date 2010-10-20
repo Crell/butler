@@ -1,5 +1,45 @@
 <?php
 
+class ButlerRequestTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Butler Request functionality',
+      'description' => 'Test the Butler request object.',
+      'group' => 'Butler',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('butler');
+  }
+
+  /**
+   * Test basic request information.
+   */
+  function testBasicRequestInfo() {
+    $_GET['foo'] = 'bar';
+
+    $request = new DrupalRequestHttp();
+
+    $foo = $request->get('foo');
+
+    $this->assertEqual($foo, 'foo', t('Correct GET variable returned.'));
+  }
+
+  /**
+   * Test filtering of request information.
+   */
+  function testFilteredRequestInfo() {
+    $_GET['foo'] = 'bar';
+
+    $request = new DrupalRequestHttp();
+
+    $foo = $request->get('foo');
+
+    $this->assertEqual($foo, 'foo', t('Correct GET variable returned and filtered.'));
+  }
+}
+
 class ButlerTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
@@ -18,7 +58,7 @@ class ButlerTestCase extends DrupalWebTestCase {
    */
   function testSimpleRegistration() {
     $_GET['foo'] = 'bar';
-    
+
     $butler = new DrupalContext(new ButlerFakeRequest(array('foo' => 'bar')));
 
     $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
