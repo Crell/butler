@@ -23,7 +23,7 @@ class ButlerRequestTestCase extends DrupalWebTestCase {
 
     $foo = $request->get('foo');
 
-    $this->assertEqual($foo, 'foo', t('Correct GET variable returned.'));
+    $this->assertEqual($foo, 'bar', t('Correct GET variable returned.'));
   }
 
   /**
@@ -36,7 +36,7 @@ class ButlerRequestTestCase extends DrupalWebTestCase {
 
     $foo = $request->get('foo');
 
-    $this->assertEqual($foo, 'foo', t('Correct GET variable returned and filtered.'));
+    $this->assertEqual($foo, 'bar', t('Correct GET variable returned and filtered.'));
   }
 }
 
