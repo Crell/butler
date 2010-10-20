@@ -105,7 +105,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
     }
 
     // @todo This needs proper escaping.  I'm not entirely sure how to do that.
-    return isset($this->requestHeaders[$header]) ? $this->requestHeader : NULL;
+    return isset($this->requestHeaders[$header]) ? $this->requestHeaders[$header] : NULL;
   }
 
 }
