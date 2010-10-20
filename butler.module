@@ -11,6 +11,51 @@ class ButlerLockedException extends Exception {}
 class ButlerNotLockedException extends Exception {}
 
 interface DrupalRequestInterface {
+  /**
+   * Retrieves a value from the GET query.
+   *
+   * See the PHP ext/filter documentation for details.
+   *
+   * @link http://www.php.net/manual/en/book.filter.php
+   *
+   * @param string $param
+   *   The name of the GET parameter to retrieve.
+   * @param int $filter
+   *   The PHP filter rules to apply to the filter. See the ext/filter
+   *   documentation for a complete list of available settings.
+   * @param array $options
+   *   An array of options to customize $filter.  See the ext/filter
+   *   documentation for a complete list of available settings.
+   * @return mixed
+   */
+  public function get($param, $filter = FILTER_UNSAFE_RAW, $options = array());
+
+  /**
+   * Retrieves a value from the POST query.
+   *
+   * See the PHP ext/filter documentation for details.
+   *
+   * @link http://www.php.net/manual/en/book.filter.php
+   *
+   * @param int $filter
+   *   The PHP filter rules to apply to the filter. See the ext/filter
+   *   documentation for a complete list of available settings.
+   * @param array $options
+   *   An array of options to customize $filter.  See the ext/filter
+   *   documentation for a complete list of available settings.
+   *
+   * @return mixed
+   */
+  public function post($param, $filter = FILTER_UNSAFE_RAW, $options = array());
+
+  /**
+   * Retrives an arbitrary HTTP header.
+   *
+   * @param string $header
+   *   The name of the header to request.
+   * @return mixed
+   */
+  public function header($header);
 
 }
 
@@ -43,21 +88,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
   }
 
   /**
-   * Retrieves a value from the GET query.
-   *
-   * See the PHP ext/filter documentation for details.
-   *
-   * @link http://www.php.net/manual/en/book.filter.php
-   *
-   * @param string $param
-   *   The name of the GET parameter to retrieve.
-   * @param int $filter
-   *   The PHP filter rules to apply to the filter. See the ext/filter
-   *   documentation for a complete list of available settings.
-   * @param array $options
-   *   An array of options to customize $filter.  See the ext/filter
-   *   documentation for a complete list of available settings.
-   * @return mixed
+   * Implements DrupalRequestInterface::get().
    */
   public function get($param, $filter = FILTER_UNSAFE_RAW, $options = array()) {
     if (!empty($this->getQuery[$param])) {
@@ -67,20 +98,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
   }
 
   /**
-   * Retrieves a value from the POST query.
-   *
-   * See the PHP ext/filter documentation for details.
-   *
-   * @link http://www.php.net/manual/en/book.filter.php
-   *
-   * @param int $filter
-   *   The PHP filter rules to apply to the filter. See the ext/filter
-   *   documentation for a complete list of available settings.
-   * @param array $options
-   *   An array of options to customize $filter.  See the ext/filter
-   *   documentation for a complete list of available settings.
-   *
-   * @return mixed
+   * Implements DrupalRequestInterface::post().
    */
   public function post($param, $filter = FILTER_UNSAFE_RAW, $options = array()) {
     if (!empty($this->postQuery[$param])) {
@@ -91,11 +109,7 @@ class DrupalRequestHttp implements DrupalRequestInterface {
 
 
   /**
-   * Retrives an arbitrary HTTP header.
-   *
-   * @param string $header
-   *   The name of the header to request.
-   * @return mixed
+   * Implements DrupalRequestInterface::header().
    */
   public function header($header) {
     // @todo This is, of course, Apache-specific.  We need to find the IIS
@@ -114,6 +128,34 @@ class DrupalRequestHttp implements DrupalRequestInterface {
  * Interface definition for all context objects.
  */
 interface DrupalContextInterface extends ArrayAccess {
+
+  /**
+   * Access the HTTP request information.
+   *
+   * @return DrupalRequestInterface
+   */
+  public function request();
+
+  /**
+   * Register a class as the handler for a given context.
+   *
+   * @param string $context
+   *   The context key to register for, such as "http:get".
+   * @param string $class
+   *   The name of the class that will handle this context key, unless overridden.
+   *   The class must implement ContextHandlerInterface.
+   * @param array $params
+   *   An array of configuration options for the class.
+   */
+  public function registerHandler($context, $class, $params = array());
+
+  /**
+   * Lock this context object against futher modification.
+   *
+   * This allows us to setup a mocked context object very easily, and then
+   * make it immutable so we know that it won't change out from under us.
+   */
+  public function lock();
 
 }
 
@@ -172,9 +214,7 @@ class DrupalContext implements DrupalContextInterface {
   }
 
   /**
-   * Access the HTTP request information.
-   *
-   * @return DrupalRequestInterface
+   * Implmenents DrupalContextInterface::request().
    */
   public function request() {
     return $this->request;
@@ -185,10 +225,16 @@ class DrupalContext implements DrupalContextInterface {
     return arg($index, $this->queryString);
   }
 
+  /**
+   * Implements ArrayAccess:offsetExists().
+   */
   public function offsetExists($offset) {
     return isset($this->handlers[$offset]);
   }
 
+  /**
+   * Implements ArrayAccess:offsetGet().
+   */
   public function offsetGet($offset) {
     if (!$this->locked) {
       throw new ButlerNotLockedException(t('This butler object has not been locked. It must be locked before it can be used.'));
@@ -218,6 +264,9 @@ class DrupalContext implements DrupalContextInterface {
     return $this->context[$offset];
   }
 
+  /**
+   * Implements ArrayAccess:offsetSet().
+   */
   public function offsetSet($offset, $value) {
     if ($this->locked) {
       throw new ButlerLockedException(t('This butler object has been locked. It no longer accepts new explicit context sets.'));
@@ -226,6 +275,9 @@ class DrupalContext implements DrupalContextInterface {
     $this->context[$offset] = $value;
   }
 
+  /**
+   * Implements ArrayAccess:offsetUnset().
+   */
   public function offsetUnset($offset) {
     if ($this->locked) {
       throw new ButlerLockedException(t('This butler object has been locked. It no longer accepts context clears.'));
@@ -236,15 +288,7 @@ class DrupalContext implements DrupalContextInterface {
   }
 
   /**
-   * Register a class as the handler for a given context.
-   *
-   * @param string $context
-   *   The context key to register for, such as "http:get".
-   * @param string $class
-   *   The name of the class that will handle this context key, unless overridden.
-   *   The class must implement ContextHandlerInterface.
-   * @param array $params
-   *   An array of configuration options for the class.
+   * Implmenents DrupalContextInterface::registerHandler().
    */
   public function registerHandler($context, $class, $params = array()) {
     if ($this->locked) {
@@ -254,10 +298,7 @@ class DrupalContext implements DrupalContextInterface {
   }
 
   /**
-   * Lock this context object against futher modification.
-   *
-   * This allows us to setup a mocked context object very easily, and then
-   * make it immutable so we know that it won't change out from under us.
+   * Implmenents DrupalContextInterface::lock().
    */
   public function lock() {
     $this->locked = TRUE;
