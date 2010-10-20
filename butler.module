@@ -42,20 +42,6 @@ class DrupalRequestHttp implements DrupalRequestInterface {
     array_walk($this->requestQuery, '_fix_gpc_magic');
   }
 
-  public function __get($var) {
-    if ($var == 'get') {
-      return $this->getQuery;
-    }
-  }
-
-  public function __set($var, $val) {
-    if ($var == 'get' || $var == 'post') {
-      // @todo Real error handling.
-      return NULL;
-    }
-
-  }
-
   /**
    * Retrieves a value from the GET query.
    *
@@ -146,7 +132,7 @@ class DrupalContext implements DrupalContextInterface {
 
   /**
    * Index of already-instantiated handler objects.
-   * 
+   *
    * @var array
    */
   protected $handlers = array();
