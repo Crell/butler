@@ -251,7 +251,9 @@ class DrupalContext implements DrupalContextInterface {
 
       $context_key = implode(':', $offset_elements);
       if (class_exists($this->handlerClasses[$context_key]['class'])) {
-        $this->handlers[$context_key] = new $this->handlerClasses[$context_key]['class']($this, $this->handlerClasses[$context_key]['params']);
+        if (empty($this->handlers[$context_key])) {
+          $this->handlers[$context_key] = new $this->handlerClasses[$context_key]['class']($this, $this->handlerClasses[$context_key]['params']);
+        }
         $this->context[$offset] = $this->handlers[$context_key]->getValue($args);
       }
       else {
