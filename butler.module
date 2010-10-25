@@ -157,6 +157,14 @@ interface DrupalContextInterface extends ArrayAccess {
    */
   public function lock();
 
+  /**
+   * Create a mocked context object to stack on top of this one.
+   *
+   * @todo This method really should be renamed. It's a terrible name.
+   * @return DrupalContextInterface
+   */
+  public function mock();
+
 }
 
 /**
@@ -207,8 +215,14 @@ class DrupalContext implements DrupalContextInterface {
    */
   protected $locked = FALSE;
 
-  public function __construct(DrupalRequestInterface $request) {
-    $this->request = $request;
+  public function __construct(DrupalRequestInterface $request, DrupalContextInterface $parent = NULL) {
+    if ($parent) {
+      $this->request = $parent->request();
+      $this->parent = $parent;
+    }
+    else {
+      $this->request = $request;
+    }
 
     $this->queryString = $this->request->get('q');
   }
@@ -300,6 +314,13 @@ class DrupalContext implements DrupalContextInterface {
    */
   public function lock() {
     $this->locked = TRUE;
+  }
+
+  /**
+   * Implmenents DrupalContextInterface::mock().
+   */
+  public function mock() {
+    return new self($this->request, $this);
   }
 }
 
