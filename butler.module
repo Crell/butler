@@ -338,9 +338,13 @@ function butler_test() {
 
   dpm($q);
 
-
   // To check caching.
   $q = $butler['http:get:q'];
+
+  foreach (range(0, 4) as $i) {
+    $arg = $butler['arg:' . $i];
+    dpm($arg);
+  }
 
   return 'x';
 }
@@ -353,6 +357,7 @@ function butler_test() {
 function butler_context_init(DrupalContextInterface $butler) {
   $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
   $butler->registerHandler('http:post', 'ContextHandlerHttp', array('query' => 'POST'));
+  $butler->registerHandler('arg', 'ContextHandlerArg');
 }
 
 /**
@@ -418,6 +423,26 @@ class ContextHandlerHttp extends ContextHandlerAbstract {
     if ($this->params['query'] == 'POST') {
       return $this->context->request()->post($param);
     }
+  }
+}
+
+class ContextHandlerArg extends ContextHandlerAbstract {
+
+  protected $arguments = array();
+
+  public function getValue(array $args = array()) {
+    $index = $args[0];
+    $path = $this->context['http:get:q'];
+
+    if (!isset($this->arguments[$path])) {
+      $this->arguments[$path] = explode('/', $path);
+    }
+
+    if (isset($this->arguments[$path][$index])) {
+      return $this->arguments[$path][$index];
+    }
+
+    return NULL;
   }
 }
 
