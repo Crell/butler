@@ -134,12 +134,42 @@ class ButlerTestCase extends DrupalWebTestCase {
       $this->fail(t('Incorrect exception thrown when modifying a locked object.'));
     }
   }
+
+  /**
+   * Test the result caching logic.
+   */
+  function testResultCaching() {
+    $butler = new DrupalContext(new ButlerFakeRequest());
+
+    // This handler should return 1, then 2, then 3, each time it's called.
+    $butler->registerHandler('foo:bar', 'ButlerTestCaseHelperTwo');
+    $butler->lock();
+
+    // Calling the same context variable should always give the same value
+    // due to immutable caching.
+    $this->assertEqual($butler['foo:bar'], $butler['foo:bar'], t('Identical context keys always return the same value.'));
+  }
 }
 
 class ButlerTestCaseHelperOne extends ContextHandlerAbstract {
 
   public function getValue(array $args = array()) {
     return 'one';
+  }
+}
+
+class ButlerTestCaseHelperTwo extends ContextHandlerAbstract {
+
+  /**
+   * A dummy increment counter.
+   */
+  protected $i = 1;
+
+  public function getValue(array $args = array()) {
+    // This increases every time it's called.  If we ever get back something
+    // other than 1, it means the result caching is broken because we were
+    // called a second time.
+    return $this->i++;
   }
 }
 

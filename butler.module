@@ -240,21 +240,19 @@ class DrupalContext implements DrupalContextInterface {
       throw new ButlerNotLockedException(t('This butler object has not been locked. It must be locked before it can be used.'));
     }
 
-    // @todo Right now the $this->context caching is probably broken with regard
-    // to the key/args split.  Check that and fix if needed.
-
     if (!isset($this->context[$offset])) {
+      $context_key = $offset;
       $offset_elements = explode(':', $offset);
       $args = array();
-      while ($offset_elements && !isset($this->handlerClasses[$offset])) {
+      while ($offset_elements && !isset($this->handlerClasses[$context_key])) {
         $args[] = array_pop($offset_elements);
-        $offset = implode(':', $offset_elements);
+        $context_key = implode(':', $offset_elements);
       }
 
-      $offset = implode(':', $offset_elements);
-      if (class_exists($this->handlerClasses[$offset]['class'])) {
-        $this->handlers[$offset] = new $this->handlerClasses[$offset]['class']($this, $this->handlerClasses[$offset]['params']);
-        $this->context[$offset] = $this->handlers[$offset]->getValue($args);
+      $context_key = implode(':', $offset_elements);
+      if (class_exists($this->handlerClasses[$context_key]['class'])) {
+        $this->handlers[$context_key] = new $this->handlerClasses[$context_key]['class']($this, $this->handlerClasses[$context_key]['params']);
+        $this->context[$offset] = $this->handlers[$context_key]->getValue($args);
       }
       else {
         $this->context[$offset] = NULL;
@@ -337,6 +335,10 @@ function butler_test() {
   $q = $butler['http:get:q'];
 
   dpm($q);
+
+
+  // To check caching.
+  $q = $butler['http:get:q'];
 
   return 'x';
 }
