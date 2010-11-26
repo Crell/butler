@@ -1,0 +1,38 @@
+<?php
+
+class ButlerTestCaseHelperOne extends ContextHandlerAbstract {
+
+  public function getValue(array $args = array()) {
+    return 'one';
+  }
+}
+
+class ButlerTestCaseHelperTwo extends ContextHandlerAbstract {
+
+  /**
+   * A dummy increment counter.
+   */
+  protected $i = 1;
+
+  public function getValue(array $args = array()) {
+    // This increases every time it's called.  If we ever get back something
+    // other than 1, it means the result caching is broken because we were
+    // called a second time.
+    return $this->i++;
+  }
+}
+
+class ButlerFakeRequest extends DrupalRequestHttp {
+
+  public function __construct($get = array(), $post = array()) {
+    parent::__construct();
+
+    $get += array(
+      'q' => '',
+    );
+
+    $this->getQuery = $get;
+    $this->postQuery = $post;
+  }
+
+}

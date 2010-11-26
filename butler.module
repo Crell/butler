@@ -340,6 +340,8 @@ function butler_test() {
   // To check caching.
   $q = $butler['http:get:q'];
 
+  $foo = $butler['http:header:foo'];
+
   return 'x';
 }
 
@@ -351,6 +353,7 @@ function butler_test() {
 function butler_context_init(DrupalContextInterface $butler) {
   $butler->registerHandler('http:get', 'ContextHandlerHttp', array('query' => 'GET'));
   $butler->registerHandler('http:post', 'ContextHandlerHttp', array('query' => 'POST'));
+  $butler->registerHandler('http:header', 'ContextHandlerHeader');
 }
 
 /**
